@@ -26,7 +26,8 @@ struct linked_list * linked_list_create(void)
 	struct linked_list *ll = malloc_fptr(sizeof(struct linked_list));
 	if(!ll) return false;
 
-	ll->head = NULL;
+	ll->head = ll->tail = NULL;
+	ll->size = 0;
 
 	return ll;
 }
@@ -50,36 +51,23 @@ bool linked_list_delete(struct linked_list * ll)
 size_t linked_list_size(struct linked_list* ll)
 {
 	if(!ll) return SIZE_MAX;
-	size_t sz = 0;
-	struct node * n = ll->head;
-	while(n)
-	{
-		n = n->next;
-		sz++;
-	}
-	return sz;
+	return ll->size;
 }
 
 bool linked_list_insert_end(struct linked_list* ll, unsigned int data)
 {
 	if(!ll) return false;
 
-	struct node* n = ll->head;
-	struct node* p = NULL;
-	while(n)
-	{
-		p = n;
-		n = n->next;
-	}
-
 	struct node* newnode = malloc_fptr(sizeof(struct node));
 	if(!newnode) return false;
 	
 	newnode->next = NULL;
 	newnode->data = data;
-	if(!p) ll->head = newnode;
-	else p->next = newnode;
+	if(!ll->tail) ll->head = newnode;
+	else ll->tail->next = newnode;
 
+	ll->tail = newnode;
+	ll->size++;
 	return true;
 }
 
@@ -93,6 +81,8 @@ bool linked_list_insert_front(struct linked_list* ll, unsigned int data)
 	newnode->data = data;
 	newnode->next = ll->head;
 	ll->head = newnode;
+	if(ll->size == 0) ll->tail = newnode;
+	ll->size++;
 
 	return true;
 }
@@ -118,7 +108,9 @@ bool linked_list_insert(struct linked_list* ll, size_t index, unsigned int data)
 	newnode->next = n;
 	newnode->data = data;
 	if(p) p->next = newnode;
-	else ll->head = newnode;
+	else ll->head = ll->tail = newnode;
+
+	ll->size++;
 
 	return true;
 }
@@ -157,7 +149,10 @@ bool linked_list_remove(struct linked_list* ll, size_t index)
 	if(p) p->next = n->next;
 	else ll->head = n->next;
 
+	if(n == ll->tail) ll->tail = p;
+
 	free_fptr(n);
+	ll->size--;
 
 	return true;
 }
